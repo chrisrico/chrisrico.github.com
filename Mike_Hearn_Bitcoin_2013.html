@@ -1,35 +1,443 @@
-<html>
-<body style="width: 640px;margin: 2em auto;">
-<div dir="ltr"><span style="font-family:arial,sans-serif;font-size:13px">I spent last weekend at the Bitcoin 2013 conference in San Jose. It was quite huge, most estimates I see are on the order of 1000+ people. By the end of the weekend I&#39;d lost my voice and was completely exhausted. I took part in two panels and one talk.</span><br>
-<div style="font-family:arial,sans-serif;font-size:13px"><br></div><div style="font-family:arial,sans-serif;font-size:13px">Some photos are here:  <a href="http://www.bitcoin2013.com/photos.html" target="_blank">http://www.bitcoin2013.com/photos.html</a></div>
-<div style="font-family:arial,sans-serif;font-size:13px"><div><br></div><div>Here is a writeup of some of the most notable things I saw and conversations I had.<div><br></div><div><b><u>Gadgets</u></b></div><div><b><br></b></div>
-<div>Hardware was a big theme this year.</div></div><div><ul><li style="margin-left:15px">There were of course ASIC mining units on display, but I think that&#39;s relatively uninteresting by now.<br><br></li><li style="margin-left:15px">
-Butterfly Labs have also been sponsoring the development of a TREZOR competitor, the <a href="http://imgur.com/EC7EBO4" target="_blank"><b>BitSafe</b></a>. As a refresher, these devices are small units with a little black/white display in them and a couple of buttons. They plug in to a computer via USB and when you push the button, they sign payments with your Bitcoin private keys all using on board hardware. The display shows you what you&#39;re signing. Their limited nature means they should be virtually impossible to infect with malware.<br>
-<br><div style="text-align:center"><img src="http://i.imgur.com/Z0FZPpM.jpg" alt="Inline image 1" width="420" height="312"></div><br>These devices are a key part of the plan to tackle compromised end user machines. Currently neither BitSafe nor TREZOR are shipping, but both teams appear to have hardware that is substantially complete. Most likely, version one of the devices won&#39;t support the payment protocol making them vulnerable to MITM substitution attacks, but later versions will be able to read the signed payment requests that will be deployed over the course of the year.<br>
-<br>The <a href="http://bitcointrezor.com/" target="_blank"><b>TREZOR website</b></a> has been updated with a video - they&#39;re pitching for Kickstarter funding to help them turn their prototype into a real shipping product. It&#39;s very nicely produced, you should check it out.<br>
-<br>Both BitSafe and TREZOR have open source firmwares, and Chris (who is doing BitSafe development) said he wanted the devices to all be compatible, although it&#39;s likely the first versions won&#39;t be quite there due to the rapid parallel development by teams separated by oceans.<br>
-<br>One issue Chris brought up that is quite insightful, is that the design makes getting money <i>out</i> of the devices secure, but there&#39;s no obvious way to get money <i>into</i> them safely if your computer is compromised. A reverse payment protocol may form part of the solution, but more research is needed.<br>
-<br><br></li><li style="margin-left:15px">Lamassu demonstrated their cute <a href="http://lamassubtc.com/" target="_blank"><b>Bitcoin ATM</b></a>. It&#39;s as easy to use as possible - you feed in bank notes via a slot, hold up your phones screen to a glass pane when it&#39;s showing a QRcode and the coins appear a few seconds later. Done! It&#39;s probably the slickest Bitcoin ATM yet.<br>
-<br>The biggest problem all these projects face is that deployment inside the USA is borderline impossible due to the fragmented and extremely bureaucratic AML licensing regime. Some states (like California) require bonds in excess of half a million dollars to be posted just to be able to apply for a license, let alone actually get one. Lamassu plan to just manufacture the devices and let others shoulder the compliance costs, although given that you can drop them more or less anywhere almost anonymously it will be interesting to see if guerilla ATMs crop up.<br>
-<br>Some people are planning to approach the problem by focusing on parts of the world where financial regulation is less dysfunctional - a few US states have very little required licensing, and Europe has a single market for regulatory compliance. In these areas the overall costs of compliance can be amortized over a much larger potential market. How exactly such machines will be compliant with vague and expansive AML regimes that boil down to &quot;the government should know about every trade&quot; is presently unclear but it&#39;s likely they will require &quot;upgrades&quot; that make them less convenient.<br>
-<br><div style="text-align:center"><img src="http://lamassubtc.com/assets/img/lamassu-bitcoin-atm.png" alt="Inline image 2" width="420" height="324"></div><br></li><li style="margin-left:15px">The Mycelium Bitcoin Card folks were there, but once again they didn&#39;t want to demonstrate their hardware actually being switched on and operating. I&#39;m getting kind of tired of this, their hardware has been around for a while in prototype form but they never seem anywhere close to actually showing a working transaction.<br>
-</li></ul><div><b><u>Talks</u></b></div><div><ul><li style="margin-left:15px"><b>Gavin Andresen</b> did a talk that was titled &quot;State of the coin&quot;, but he said at the start there was far far too much going on to cover in a single talk, so instead he discussed core principles he thinks development should stick to.  He talked about how to balance the need to experiment with the need for stability in the core system, mentioned the payment protocol work that he and I have been working on, mentioned again that he sees mobiles and tablets being more important than desktop/laptops in future and a few other pieces. It was all good albiet high level stuff. Quote:  <i>&quot;Bitcoin is a rollercoaster. I happen to enjoy rollercoasters.&quot;</i><br>
-<br></li><li style="margin-left:15px">Pieter Wiulle did a talk on <b>heirarchical deterministic wallets</b> and announced that the spec was now finalised, with test vectors soon to come. Deterministic wallets are a critical piece of making &quot;last chance&quot; wallet backups work well, and the hardware wallets like BitSafe and TREZOR rely on them. They also open up many other useful applications and it&#39;s generally agreed that they&#39;re a big deal. So getting the standard finalised is a big step forward, as it opens the way to widespread implementation. There was some discussion of the difference between backing up wallets vs keys, and how best to handle key lookahead.<br>
-<br><div style="text-align:center"><img src="http://www.bitcoin2013.com/uploads/1/4/9/4/14946598/2315015_orig.jpeg" alt="Inline image 4" width="420" height="279"></div><br></li><li style="margin-left:15px">I moderated a panel on the future of Bitcoin, which covered various topics like coloured coins, smart property, how Bitcoin impacts tax collection, contracts and how governments might react to micro-futures, along with many other things. I also took part in an implementors panel where the difficulty of finding people to help with testing and QA was a repeated theme from Gavin.<br>
-<br></li><li style="margin-left:15px">There was a fascinating talk from <b>Dr. Eli Ben-Sasson</b> of Technion University, on the topic of <b>provable computation</b>. He made the remarkable claim that his (large, international) team was on the verge of releasing a new system that allowed any arbitrary C program to be compiled down to a form that accepted private inputs and when run, would produce a signature proving the execution was correct in the face of a malicious adversary ..... that is efficient enough to be usable. He calls it &quot;<a href="https://citp.princeton.edu/event/braverman/" target="_blank">succinct computational integrity</a>&quot;.<br>
-<br>This capability has apparently been around for some time, the problem being that the algorithms all had complexity exponential <i>or worse</i> in the running time of the program - Ben-Sasson claims they have found a way to convert this to polylog time. From a users perspective they have a magic GCC backend that compiles C programs to bytecode for a custom VM, and the proofs can be checked efficiently enough to run on smartphones. Release is expected later this year, in two phases.<br>
-<br>We spent some time brainstorming ways in which this could apply to Bitcoin - unfortunately the only ways we could come up with were relatively trivial. It would intuitively seem like many uses of trusted computing could be replaced by this technique, but the inability to shield keys from the remote side means it isn&#39;t a total replacement. Whitebox crypto in conjunction with SCI might be an interesting avenue to explore.<br>
-</li></ul><div>There were many other talks that I didn&#39;t get a chance to attend.<br></div><div><br></div><div><b><u>Developer brainstorm</u></b></div><div><b><u><br></u></b></div><div>A few core developers got together and hung out for an hour or so. We spent a lot of time dreaming up tasks to fill Jeff Garzik&#39;s plate now he&#39;s able to focus on core development full time, thanks to BitPay. We agreed that deeper insight into <b>real-time network metrics</b> was a serious need, right now we don&#39;t have good graphs of things like tx or block propagation times. </div>
-<div><br></div><div>We talked about adding some stats reporting to the protocol so we could understand performance bottlenecks. We also discussed <b>increasing block sizes</b> - there was consensus that we need to explore what happens when the software is put under heavy load as part of this process, for example, by generating artificial loads on the testnet. One idea that came up was replaying transactions from the main network at faster-than-real-time into the testnet, but unfortunately that won&#39;t work due to the dependencies on the coinbase transactions. It seems likely that there may be unexpected bottlenecks like the maxlocks problem, so there&#39;s a clear need to stay ahead of those. Unexpected complexity blowup in getblocktemplate was mentioned.</div>
-<div><br></div><div>We felt that the apparently endless arguments around block sizes would become much simpler once more data was obtained. Gavin plans to start building consensus on the exact mechanism for larger blocks over the rest of this year. He gave estimates of transaction volumes that indicate we have until the end of the year before reaching the 1mb limit, although we also agreed growth is likely to be highly unpredictable and non-linear.</div>
-<div><br></div><div>We also discussed the recent dramas around the <b>fee changes</b> - Bitcoin as an open source project is breaking new ground in how such projects are run. The press center and generally improved sophistiction of our media strategy is one example of something that&#39;s rare for an open source project. Now we&#39;re finding that some people feel protocol changes that are discussed only on github are being &quot;hidden&quot; from the community by virtue of the fact that github is only frequented by developers. This was talked about briefly, the possibility of more frequent updates posted to the forums or the Foundation blog was brought up. Whilst nobody thinks Gavin did anything wrong here, it&#39;s clear that the Bitcoin userbase has been changing rapidly and is now dominated by people who have no experience of open source software development yet have opinions about how the technology works regardless. Figuring out what to do about that is an ongoing challenge.</div>
-<div><br></div><div>A few other topics were discussed but nobody took notes and I forgot what they were.</div><div><br></div><div style="text-align:center"><img src="http://www.bitcoin2013.com/uploads/1/4/9/4/14946598/1470852_orig.jpeg" alt="Inline image 3" width="420" height="279"><br>
-<i>Developer panel with me in the middle</i></div><div><br></div><div><br></div><div><b><u>Other themes</u></b></div><div><b><u><br></u></b></div><div><b>Exchanges: </b>The conference was a remarkably positive affair despite the news of the DHS action against an exchange account held by Mt Gox earlier in the week. In fact, Mt Gox had hardly any presence at all despite their central position in the ecosystem. Many people commented that the community needed more exchanges, and I talked to several people who indicated they were working on opening up new exchanges. The recent (apparently permanent) 10x price increase, some modicum of clarity from regulators and the added legitimacy brought by large VC investments is making it feasible for the first time to actually think about being compliant <i>first</i>, and setting up the business afterwards, something that wasn&#39;t really possible when the space was so much smaller and less proven. TradeHill is back with an innovative legal strategy - they only deal with accredited investors this time around, which apparently changes the regulatory requirements for the better. They actually brought a notary to the conference so they could sign up accredited investors right on the spot. One guy, Bennett Hoffman, is trying to develop open source exchange software so the infrastructure side of running an exchange gets easier.</div>
-<div><br></div><div>A complaint I heard several times is that there are people who badly want to <b>invest in developing the Bitcoin ecosystem</b>, but connecting people with money to people who can convert it into infrastructure upgrades is difficult. Many of the people who have the necessary programming experience are already maxed out and the complex design spaces occupied by many wanted upgrades means finding talent is hard. I spent some time brainstorming with a few guys who represented &quot;the money&quot; on how to solve it. I suggested that one solution would be a move away from the bounty model with its vague requirements and duplicative competition to carefully specced contracts signed with developers who may not be core Bitcoin designers but can be trusted to write good code to spec. The specifications can then be written by trusted community members who understand what it takes to, for example, design comprehensive dispute mediation or deploy new security features. Jim Burton told me he has set up a new company and is considering trying to help solve this problem.</div>
-<div><br></div><div>A lot of people wanted to know how <b>Ripple, Litecoin, and Bitcoin</b> interact. I spent a lot of time giving answers to this one :-) Ripple had a booth there and the designer of Litecoin was also present, but I think he&#39;s been taken by surprise at the fact that it&#39;s taken off.</div>
-<div><br></div><div>There was a ton of interest in <b>contracts</b>, and it&#39;s not just because I&#39;m known for developing them - lots of panels and general QA sessions had people asking questions about Bitcoin&#39;s advanced features. A common question was, &quot;<i>why aren&#39;t these apps here yet</i>&quot; to which there&#39;s no good answer beyond &quot;<i>the programming involved is quite difficult</i>&quot;. There was often an undercurrent of impatience here - people want these apps but we need to make building them easier. Bitcoinj is a good platform on which to do this. I&#39;ll try and make some time this summer to write articles and example apps for bitcoinj showing how to do basic tasks needed for building contract protocols, as right now I&#39;m basically giving tutorials in things like partially signing transactions over email.</div>
-<div><br></div><div><br></div><div><b><u>Conclusions</u></b></div><div><b><u><br></u></b></div><div>The conference was fantastic and tremendously well run, kudos to Lindsay, our one-woman wonder organiser. Once again I found myself amazed both by Bitcoin&#39;s rapid growth and the incredible amount that is being achieved on the back of shoestring budgets. The number and quality of the conversations exceeded that of any other conference I&#39;ve been to by far.</div>
-<div><br></div><div>A nice thing to note is the changing gender ratio - the Bitcoin community is growing and more women are getting involved along the way, often by being hired by Bitcoin businesses to handle the non-technical side, or through working for the media. There are some great stories of how people end up a part of the community, often kind of randomly - the girl who handles merchant approvals for BitPay started out as a waitress at a restaurant frequented by the (now) CEO. She was the only one willing to deal with the hassle of accepting this crazy currency only one customer+his friends wanted to pay with, now she&#39;s working for a cashflow-positive startup that&#39;s adding customers at a fast pace. Good move!</div>
-</div></div></div></div>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for Linux/x86 (vers 25 March 2009), see www.w3.org" />
+
+  <title>Mike Hearn's writeup of the 2013 Bitcoin Conference</title>
+  <style type="text/css">
+/*<![CDATA[*/
+  body.c6 {width: 640px;margin: 2em auto;}
+  div.c5 {text-align:center}
+  li.c4 {margin-left:15px}
+  strong.c3 {text-decoration: underline}
+  div.c2 {font-family:arial,sans-serif;font-size:13px}
+  span.c1 {font-family:arial,sans-serif;font-size:13px}
+  /*]]>*/
+  </style>
+</head>
+
+<body class="c6">
+  <div dir="ltr">
+    <span class="c1">I spent last weekend at the Bitcoin 2013 conference in San Jose. It
+    was quite huge, most estimates I see are on the order of 1000+ people. By the end of
+    the weekend I'd lost my voice and was completely exhausted. I took part in two panels
+    and one talk.</span><br />
+
+    <div class="c2">
+      <br />
+    </div>
+
+    <div class="c2">
+      Some photos are here: <a href="http://www.bitcoin2013.com/photos.html" target=
+      "_blank">http://www.bitcoin2013.com/photos.html</a>
+    </div>
+
+    <div class="c2">
+      <div>
+        <br />
+      </div>
+
+      <div>
+        Here is a writeup of some of the most notable things I saw and conversations I
+        had.
+
+        <div>
+          <br />
+        </div>
+
+        <div>
+          <strong class="c3">Gadgets</strong>
+        </div>
+
+        <div>
+          <strong><br /></strong>
+        </div>
+
+        <div>
+          Hardware was a big theme this year.
+        </div>
+      </div>
+
+      <div>
+        <ul>
+          <li class="c4">There were of course ASIC mining units on display, but I think
+          that's relatively uninteresting by now.<br />
+          <br /></li>
+
+          <li class="c4">Butterfly Labs have also been sponsoring the development of a
+          TREZOR competitor, the <a href="http://imgur.com/EC7EBO4" target=
+          "_blank"><strong>BitSafe</strong></a>. As a refresher, these devices are small
+          units with a little black/white display in them and a couple of buttons. They
+          plug in to a computer via USB and when you push the button, they sign payments
+          with your Bitcoin private keys all using on board hardware. The display shows
+          you what you're signing. Their limited nature means they should be virtually
+          impossible to infect with malware.<br />
+            <br />
+
+            <div class="c5"><img src="http://i.imgur.com/Z0FZPpM.jpg" alt=
+            "Inline image 1" width="420" height="312" /></div><br />
+            These devices are a key part of the plan to tackle compromised end user
+            machines. Currently neither BitSafe nor TREZOR are shipping, but both teams
+            appear to have hardware that is substantially complete. Most likely, version
+            one of the devices won't support the payment protocol making them vulnerable
+            to MITM substitution attacks, but later versions will be able to read the
+            signed payment requests that will be deployed over the course of the
+            year.<br />
+            <br />
+            The <a href="http://bitcointrezor.com/" target="_blank"><strong>TREZOR
+            website</strong></a> has been updated with a video - they're pitching for
+            Kickstarter funding to help them turn their prototype into a real shipping
+            product. It's very nicely produced, you should check it out.<br />
+            <br />
+            Both BitSafe and TREZOR have open source firmwares, and Chris (who is doing
+            BitSafe development) said he wanted the devices to all be compatible,
+            although it's likely the first versions won't be quite there due to the rapid
+            parallel development by teams separated by oceans.<br />
+            <br />
+            One issue Chris brought up that is quite insightful, is that the design makes
+            getting money <em>out</em> of the devices secure, but there's no obvious way
+            to get money <em>into</em> them safely if your computer is compromised. A
+            reverse payment protocol may form part of the solution, but more research is
+            needed.<br />
+            <br />
+            <br />
+          </li>
+
+          <li class="c4">Lamassu demonstrated their cute <a href="http://lamassubtc.com/"
+            target="_blank"><strong>Bitcoin ATM</strong></a>. It's as easy to use as
+            possible - you feed in bank notes via a slot, hold up your phones screen to a
+            glass pane when it's showing a QRcode and the coins appear a few seconds
+            later. Done! It's probably the slickest Bitcoin ATM yet.<br />
+            <br />
+            The biggest problem all these projects face is that deployment inside the USA
+            is borderline impossible due to the fragmented and extremely bureaucratic AML
+            licensing regime. Some states (like California) require bonds in excess of
+            half a million dollars to be posted just to be able to apply for a license,
+            let alone actually get one. Lamassu plan to just manufacture the devices and
+            let others shoulder the compliance costs, although given that you can drop
+            them more or less anywhere almost anonymously it will be interesting to see
+            if guerilla ATMs crop up.<br />
+            <br />
+            Some people are planning to approach the problem by focusing on parts of the
+            world where financial regulation is less dysfunctional - a few US states have
+            very little required licensing, and Europe has a single market for regulatory
+            compliance. In these areas the overall costs of compliance can be amortized
+            over a much larger potential market. How exactly such machines will be
+            compliant with vague and expansive AML regimes that boil down to "the
+            government should know about every trade" is presently unclear but it's
+            likely they will require "upgrades" that make them less convenient.<br />
+            <br />
+
+            <div class="c5"><img src=
+            "http://lamassubtc.com/assets/img/lamassu-bitcoin-atm.png" alt=
+            "Inline image 2" width="420" height="324" /></div><br />
+          </li>
+
+          <li class="c4">The Mycelium Bitcoin Card folks were there, but once again they
+          didn't want to demonstrate their hardware actually being switched on and
+          operating. I'm getting kind of tired of this, their hardware has been around
+          for a while in prototype form but they never seem anywhere close to actually
+          showing a working transaction.<br /></li>
+        </ul>
+
+        <div>
+          <strong class="c3">Talks</strong>
+        </div>
+
+        <div>
+          <ul>
+            <li class="c4"><strong>Gavin Andresen</strong> did a talk that was titled
+            "State of the coin", but he said at the start there was far far too much
+            going on to cover in a single talk, so instead he discussed core principles
+            he thinks development should stick to. He talked about how to balance the
+            need to experiment with the need for stability in the core system, mentioned
+            the payment protocol work that he and I have been working on, mentioned again
+            that he sees mobiles and tablets being more important than desktop/laptops in
+            future and a few other pieces. It was all good albiet high level stuff.
+            Quote: <em>"Bitcoin is a rollercoaster. I happen to enjoy
+            rollercoasters."</em><br />
+            <br /></li>
+
+            <li class="c4">Pieter Wiulle did a talk on <strong>heirarchical deterministic
+            wallets</strong> and announced that the spec was now finalised, with test
+            vectors soon to come. Deterministic wallets are a critical piece of making
+            "last chance" wallet backups work well, and the hardware wallets like BitSafe
+            and TREZOR rely on them. They also open up many other useful applications and
+            it's generally agreed that they're a big deal. So getting the standard
+            finalised is a big step forward, as it opens the way to widespread
+            implementation. There was some discussion of the difference between backing
+            up wallets vs keys, and how best to handle key lookahead.<br />
+              <br />
+
+              <div class="c5"><img src=
+              "http://www.bitcoin2013.com/uploads/1/4/9/4/14946598/2315015_orig.jpeg"
+              alt="Inline image 4" width="420" height="279" /></div><br />
+            </li>
+
+            <li class="c4">I moderated a panel on the future of Bitcoin, which covered
+            various topics like coloured coins, smart property, how Bitcoin impacts tax
+            collection, contracts and how governments might react to micro-futures, along
+            with many other things. I also took part in an implementors panel where the
+            difficulty of finding people to help with testing and QA was a repeated theme
+            from Gavin.<br />
+            <br /></li>
+
+            <li class="c4">There was a fascinating talk from <strong>Dr. Eli
+            Ben-Sasson</strong> of Technion University, on the topic of <strong>provable
+            computation</strong>. He made the remarkable claim that his (large,
+            international) team was on the verge of releasing a new system that allowed
+            any arbitrary C program to be compiled down to a form that accepted private
+            inputs and when run, would produce a signature proving the execution was
+            correct in the face of a malicious adversary ..... that is efficient enough
+            to be usable. He calls it "<a href=
+            "https://citp.princeton.edu/event/braverman/" target="_blank">succinct
+            computational integrity</a>".<br />
+            <br />
+            This capability has apparently been around for some time, the problem being
+            that the algorithms all had complexity exponential <em>or worse</em> in the
+            running time of the program - Ben-Sasson claims they have found a way to
+            convert this to polylog time. From a users perspective they have a magic GCC
+            backend that compiles C programs to bytecode for a custom VM, and the proofs
+            can be checked efficiently enough to run on smartphones. Release is expected
+            later this year, in two phases.<br />
+            <br />
+            We spent some time brainstorming ways in which this could apply to Bitcoin -
+            unfortunately the only ways we could come up with were relatively trivial. It
+            would intuitively seem like many uses of trusted computing could be replaced
+            by this technique, but the inability to shield keys from the remote side
+            means it isn't a total replacement. Whitebox crypto in conjunction with SCI
+            might be an interesting avenue to explore.<br /></li>
+          </ul>
+
+          <div>
+            There were many other talks that I didn't get a chance to attend.<br />
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            <strong class="c3">Developer brainstorm</strong>
+          </div>
+
+          <div>
+            <strong class="c3"><br /></strong>
+          </div>
+
+          <div>
+            A few core developers got together and hung out for an hour or so. We spent a
+            lot of time dreaming up tasks to fill Jeff Garzik's plate now he's able to
+            focus on core development full time, thanks to BitPay. We agreed that deeper
+            insight into <strong>real-time network metrics</strong> was a serious need,
+            right now we don't have good graphs of things like tx or block propagation
+            times.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            We talked about adding some stats reporting to the protocol so we could
+            understand performance bottlenecks. We also discussed <strong>increasing
+            block sizes</strong> - there was consensus that we need to explore what
+            happens when the software is put under heavy load as part of this process,
+            for example, by generating artificial loads on the testnet. One idea that
+            came up was replaying transactions from the main network at
+            faster-than-real-time into the testnet, but unfortunately that won't work due
+            to the dependencies on the coinbase transactions. It seems likely that there
+            may be unexpected bottlenecks like the maxlocks problem, so there's a clear
+            need to stay ahead of those. Unexpected complexity blowup in getblocktemplate
+            was mentioned.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            We felt that the apparently endless arguments around block sizes would become
+            much simpler once more data was obtained. Gavin plans to start building
+            consensus on the exact mechanism for larger blocks over the rest of this
+            year. He gave estimates of transaction volumes that indicate we have until
+            the end of the year before reaching the 1mb limit, although we also agreed
+            growth is likely to be highly unpredictable and non-linear.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            We also discussed the recent dramas around the <strong>fee changes</strong> -
+            Bitcoin as an open source project is breaking new ground in how such projects
+            are run. The press center and generally improved sophistiction of our media
+            strategy is one example of something that's rare for an open source project.
+            Now we're finding that some people feel protocol changes that are discussed
+            only on github are being "hidden" from the community by virtue of the fact
+            that github is only frequented by developers. This was talked about briefly,
+            the possibility of more frequent updates posted to the forums or the
+            Foundation blog was brought up. Whilst nobody thinks Gavin did anything wrong
+            here, it's clear that the Bitcoin userbase has been changing rapidly and is
+            now dominated by people who have no experience of open source software
+            development yet have opinions about how the technology works regardless.
+            Figuring out what to do about that is an ongoing challenge.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            A few other topics were discussed but nobody took notes and I forgot what
+            they were.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div class="c5">
+            <img src=
+            "http://www.bitcoin2013.com/uploads/1/4/9/4/14946598/1470852_orig.jpeg" alt=
+            "Inline image 3" width="420" height="279" /><br />
+            <em>Developer panel with me in the middle</em>
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            <strong class="c3">Other themes</strong>
+          </div>
+
+          <div>
+            <strong class="c3"><br /></strong>
+          </div>
+
+          <div>
+            <strong>Exchanges:</strong> The conference was a remarkably positive affair
+            despite the news of the DHS action against an exchange account held by Mt Gox
+            earlier in the week. In fact, Mt Gox had hardly any presence at all despite
+            their central position in the ecosystem. Many people commented that the
+            community needed more exchanges, and I talked to several people who indicated
+            they were working on opening up new exchanges. The recent (apparently
+            permanent) 10x price increase, some modicum of clarity from regulators and
+            the added legitimacy brought by large VC investments is making it feasible
+            for the first time to actually think about being compliant <em>first</em>,
+            and setting up the business afterwards, something that wasn't really possible
+            when the space was so much smaller and less proven. TradeHill is back with an
+            innovative legal strategy - they only deal with accredited investors this
+            time around, which apparently changes the regulatory requirements for the
+            better. They actually brought a notary to the conference so they could sign
+            up accredited investors right on the spot. One guy, Bennett Hoffman, is
+            trying to develop open source exchange software so the infrastructure side of
+            running an exchange gets easier.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            A complaint I heard several times is that there are people who badly want to
+            <strong>invest in developing the Bitcoin ecosystem</strong>, but connecting
+            people with money to people who can convert it into infrastructure upgrades
+            is difficult. Many of the people who have the necessary programming
+            experience are already maxed out and the complex design spaces occupied by
+            many wanted upgrades means finding talent is hard. I spent some time
+            brainstorming with a few guys who represented "the money" on how to solve it.
+            I suggested that one solution would be a move away from the bounty model with
+            its vague requirements and duplicative competition to carefully specced
+            contracts signed with developers who may not be core Bitcoin designers but
+            can be trusted to write good code to spec. The specifications can then be
+            written by trusted community members who understand what it takes to, for
+            example, design comprehensive dispute mediation or deploy new security
+            features. Jim Burton told me he has set up a new company and is considering
+            trying to help solve this problem.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            A lot of people wanted to know how <strong>Ripple, Litecoin, and
+            Bitcoin</strong> interact. I spent a lot of time giving answers to this one
+            :-) Ripple had a booth there and the designer of Litecoin was also present,
+            but I think he's been taken by surprise at the fact that it's taken off.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            There was a ton of interest in <strong>contracts</strong>, and it's not just
+            because I'm known for developing them - lots of panels and general QA
+            sessions had people asking questions about Bitcoin's advanced features. A
+            common question was, "<em>why aren't these apps here yet</em>" to which
+            there's no good answer beyond "<em>the programming involved is quite
+            difficult</em>". There was often an undercurrent of impatience here - people
+            want these apps but we need to make building them easier. Bitcoinj is a good
+            platform on which to do this. I'll try and make some time this summer to
+            write articles and example apps for bitcoinj showing how to do basic tasks
+            needed for building contract protocols, as right now I'm basically giving
+            tutorials in things like partially signing transactions over email.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            <strong class="c3">Conclusions</strong>
+          </div>
+
+          <div>
+            <strong class="c3"><br /></strong>
+          </div>
+
+          <div>
+            The conference was fantastic and tremendously well run, kudos to Lindsay, our
+            one-woman wonder organiser. Once again I found myself amazed both by
+            Bitcoin's rapid growth and the incredible amount that is being achieved on
+            the back of shoestring budgets. The number and quality of the conversations
+            exceeded that of any other conference I've been to by far.
+          </div>
+
+          <div>
+            <br />
+          </div>
+
+          <div>
+            A nice thing to note is the changing gender ratio - the Bitcoin community is
+            growing and more women are getting involved along the way, often by being
+            hired by Bitcoin businesses to handle the non-technical side, or through
+            working for the media. There are some great stories of how people end up a
+            part of the community, often kind of randomly - the girl who handles merchant
+            approvals for BitPay started out as a waitress at a restaurant frequented by
+            the (now) CEO. She was the only one willing to deal with the hassle of
+            accepting this crazy currency only one customer+his friends wanted to pay
+            with, now she's working for a cashflow-positive startup that's adding
+            customers at a fast pace. Good move!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
