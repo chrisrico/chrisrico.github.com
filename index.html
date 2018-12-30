@@ -11,7 +11,7 @@
 				<dt>Winners</dt>
 			</dl>
 		</div>
-		<dl id="users">
+		<dl id="users" style="display: none">
 			<dt>Users entered</dt>
 		</dl>
 		<script>
@@ -96,6 +96,7 @@
 			}
 
 			function processEntries(entries) {
+				$('#users').show();
 				entries
 					.filter(isValidEntry)
 					.forEach(printEntry);
