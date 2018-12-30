@@ -5,8 +5,8 @@
 	</head>
 	<body>
 		<div id="status">Loading...</div>
-		<ul id="users">
-		</ul>
+		<dl id="users">
+		</dl>
 		<script>
 			function getAccessToken() {
 				return $.ajax('https://www.reddit.com/api/v1/access_token', {
@@ -90,7 +90,7 @@
 								reject(progress, author.name, rejectedReason);
 							} else {
 								contestants.push(author.name);
-								$('#users').append(`<li>${ author.name }</li>`);
+								$('#users').append(`<dd>${ author.name }</dd>`);
 							}
 						});
 						promiseChain = promiseChain.then(iteration);
