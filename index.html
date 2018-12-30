@@ -11,8 +11,8 @@
 				<dt>Winners</dt>
 			</dl>
 		</div>
-		<dl id="users" style="display: none">
-			<dt>Users entered</dt>
+		<dl id="entries" style="display: none">
+			<dt>Entries</dt>
 		</dl>
 		<script>
 			// Unique ID for your post
@@ -96,7 +96,8 @@
 			}
 
 			function processEntries(entries) {
-				$('#users').show();
+				$('#entries').show();
+
 				entries
 					.filter(isValidEntry)
 					.forEach(printEntry);
@@ -125,31 +126,50 @@
 			}
 
 			function printEntry({author}) {
-				$('#users').append(`<dd>${ author.name }</dd>`);
+				$('#entries').append(`<dd>${ author.name }</dd>`);
 			}
 
 			function generateRandomNumber(min , max) {
 				return Math.floor(Math.random() * (max-min) + min);
 			}
 
+			// Fishers-Yates (Knuth) Shuffle
+			// https://stackoverflow.com/a/2450976
+			Array.prototype.shuffle = function() {
+				let array = this.slice(0);
+				var currentIndex = array.length, temporaryValue, randomIndex;
+
+				// While there remain elements to shuffle...
+				while (0 !== currentIndex) {
+
+					// Pick a remaining element...
+					randomIndex = Math.floor(Math.random() * currentIndex);
+					currentIndex -= 1;
+
+					// And swap it with the current element.
+					temporaryValue = array[currentIndex];
+					array[currentIndex] = array[randomIndex];
+					array[randomIndex] = temporaryValue;
+				}
+
+				return array;
+			}
+
 			function pickEntries() {
 				$('#results').show();
-				// remove the current winners
+				let winners = $('#entries dd')
+					.toArray()
+					// get just the names
+					.map(e => e.innerText)
+					// shuffle them
+					.shuffle()
+					// take the first three
+					.slice(0, 3);
+
+				// remove any existing winners
 				$("#results dd").remove();
-				// reset the possible winners
-				$('#users dd.winner').removeClass('winner');
-				[1, 2, 3].forEach(() => {
-					// from all the users who have not yet been picked
-					let possibilities = $('#users dd:not(.winner)');
-					// generate a random number between 0 and the number of users
-					let winningNumber = generateRandomNumber(0, possibilities.length);
-					console.log(`Winning number: ${winningNumber} out of ${possibilities.length}`)
-					let winner = $(possibilities[winningNumber]);
-					// mark them as a winner so they're not chosen again
-					winner.addClass('winner');
-					// put them in the winners list
-					$('#results').append(winner.clone());
-				});
+				// add the new ones
+				winners.forEach(winner => $('#results').append(`<dd>${winner}</dd>`));
 			}
 		</script>
 	</body>
