@@ -5,9 +5,32 @@
 	</head>
 	<body>
 		<div id="status">Loading...</div>
+		<div id="drawing" style="display: none">
+			<button onclick="pickEntries()">DRAW!</button>
+			<dl id="results">
+				<dt>Winners</dt>
+			</dl>
+		</div>
 		<dl id="users">
+			<dt>Users entered</dt>
 		</dl>
 		<script>
+			// Unique ID for your post
+			const submissionId = 'aahfcv';
+			// December 30th at 12PM IN YOUR TIME ZONE
+			const endTimestamp = new Date('2018-12-30 12:00 PM').getTime() / 1000;
+
+			// 1. Get an anonymous access token
+			getAccessToken()
+				// 2. Fetch the submission
+				.then(fetchSubmission)
+				// 3. Fetch all the root level comments
+				.then(fetchAllComments)
+				// 4. Get a list of valid, unique comments
+				.then(processUniqueComments)
+				// 5. Print the valid entries
+				.then(processEntries);
+
 			function getAccessToken() {
 				return $.ajax('https://www.reddit.com/api/v1/access_token', {
 					type: 'POST',
@@ -21,85 +44,111 @@
 				});
 			}
 
+			// Log a rejected entry
 			function reject(name, reason) {
 				console.log(`Rejected user ${name} (${reason})`);
 			}
 
-			// Unique ID for your post
-			const submissionId = 'aahfcv';
-			// December 30th at 12PM IN YOUR TIME ZONE (monthIndex starts at zero)
-			const endTime = new Date(2018, 11, 30, 12, 0, 0);
-			// Unique list of contestants
-			const contestants = [];
-
-			// This generates an anonymous access token I use to interact with the API
-			getAccessToken().then(data => {
+			function fetchSubmission(data) {
 				// Setup the API client
 				const r = window.r = new snoowrap({
 					userAgent: 'MrFahrenheit-451-Raven-Giveaway',
 					accessToken: data.access_token
 				});
-				r.config({ proxies: false, requestDelay: 100 });
+				r.config({ proxies: false, requestDelay: 10 });
 
 				// fetch the submission
-				r.getSubmission(submissionId).fetch().then(submission => {
-					$('#status').text('Fetching comments...');
+				return r.getSubmission(submissionId).fetch();
+			}
 
-					// fetch all the root level comments
-					return submission.comments.fetchAll({skipReplies: true}).then(comments => ({
-						submission,
-						comments
-					}));
-				}).then(({submission, comments}) => {
-					// get all the names in order so we can look up our progress
-					let names = comments.map(comment => comment.author.name);
+			function fetchAllComments(submission) {
+				$('#status').text('Fetching comments...');
 
-					let promiseChain = Promise.resolve();
-					// for every comment
-					for (let i = 0; i < comments.length; i++) {
-						let comment = comments[i];
+				// fetch all the root level comments
+				return submission.comments.fetchAll({skipReplies: true}).then(comments => ({
+					submission,
+					comments
+				}));
+			}
+
+			function processUniqueComments({submission, comments}) {
+				// unique, valid comments
+				let uniqueComments = Object.values(comments
+					.filter(isValidComment)
+					// only keep one entry per user
+					.reduce((unique, comment) => {
 						let name = comment.author.name;
+						if (name in unique) reject(name, 'duplicate');
+						else unique[name] = comment;
+						return unique;
+					}, {}));
 
-						// if the user is deleted, skip
-						if (name === '[deleted]') continue;
+				// For each comment, fetch the author
+				// Waits for all operations to complete
+				return Promise.all(uniqueComments.map((comment, i) => {
+					return comment.author.fetch().then(author => {
+						$('#status').text(`Processing comment ${i} of ${uniqueComments.length}...`)
+						return {
+							submission, comment, author
+						};
+					});
+				}));
+			}
 
-						// if the comment was created after the end time, skip
-						if (comment.created_utc > endTime.getTime() / 1000) {
-							reject(i + 1, name, 'account too new');
-							continue;
-						}
+			function processEntries(entries) {
+				entries
+					.filter(isValidEntry)
+					.forEach(printEntry);
 
-						// fetch the author's account
-						let iteration = comment.author.fetch().then(author => {
-							// our progress through the list of names
-							let progress = names.indexOf(author.name) + 1;
+				$('#status').hide();
+				$('#drawing').show();
+			}
 
-							$('#status').text(`Processing comment ${progress} of ${comments.length}...`)
+			function isValidComment(comment) {
+				let name = comment.author.name;
+				// don't bother lookup up accounts with the name [deleted]
+				if (name === '[deleted]') return false;
+				// if the comment was created after the cutoff
+				if (comment.created_utc > endTimestamp) {
+					return reject(name, 'entered after deadline');
+				}
+				return true;
+			}
 
-							let rejectedReason;
-							if (contestants.indexOf(name) >= 0) {
-								// if the user is a duplicate, continue
-								rejectedReason = 'duplicate';
-							} else if (author.created_utc > submission.created_utc) {
-								// if the account was created before the submission
-								rejectedReason = 'account too new';
-							}
+			function isValidEntry({submission, author}) {
+				// if the account was created before your post
+				if (author.created_utc > submission.created_utc) {
+					return reject(author.name, 'account too new');
+				}
+				return true;
+			}
 
-							// if they're rejected, log the reason
-							if (rejectedReason) {
-								reject(progress, author.name, rejectedReason);
-							} else {
-								contestants.push(author.name);
-								$('#users').append(`<dd>${ author.name }</dd>`);
-							}
-						});
-						promiseChain = promiseChain.then(iteration);
-					}
-					return promiseChain;
-				}).then(() => {
-					$('#status').text('Finished!');
-				});;
-			});
+			function printEntry({author}) {
+				$('#users').append(`<dd>${ author.name }</dd>`);
+			}
+
+			function generateRandomNumber(min , max) {
+				return Math.floor(Math.random() * (max-min) + min);
+			}
+
+			function pickEntries() {
+				// remove the current winners
+				$("#results dd").remove();
+				// reset the possible winners
+				$('#users dd.winner').removeClass('winner');
+				[1, 2, 3].forEach(() => {
+					// from all the users who have not yet been picked
+					let possibilities = $('#users dd:not(.winner)');
+					// generate a random number between 0 and the number of users
+					let winningNumber = generateRandomNumber(0, possibilities.length);
+					console.log(`Winning number: ${winningNumber} out of ${possibilities.length}`)
+					let winner = $(possibilities[winningNumber]);
+					// mark them as a winner so they're not chosen again
+					winner.addClass('winner');
+					// put them in the winners list
+					$('#results').append(winner.clone());
+				});
+			}
 		</script>
 	</body>
 </html>
