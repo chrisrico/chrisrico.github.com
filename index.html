@@ -1,12 +1,111 @@
 <html>
 	<head>
-		<script src="https://not-an-aardvark.github.io/snoowrap/snoowrap-v1.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://not-an-aardvark.github.io/snoowrap/snoowrap-v1.15.0.min.js"></script>
+		<style type="">
+			li {
+				display: inline-block;
+				margin: 0 0.1em;
+			}
+		</style>
 	</head>
 	<body>
+		<div id="status">Loading...</div>
 		<ul id="users">
 		</ul>
 		<script>
-			console.log(r.getSubmission('2np694'));
+			function getAccessToken() {
+				return $.ajax('https://www.reddit.com/api/v1/access_token', {
+					type: 'POST',
+					data: {
+						grant_type: 'https://oauth.reddit.com/grants/installed_client',
+						device_id: 'DO_NOT_TRACK_THIS_DEVICE'
+					},
+					headers: {
+						authorization: `Basic ${ btoa('0Ry1TaKGFLtP5Q:') }`,
+					}
+				});
+			}
+
+			function reject(index, name, reason) {
+				console.log(`Rejected comment #${index}: ${name} (${reason})`);
+			}
+
+			// Unique ID for your post
+			const submissionId = 'aahfcv';
+			// December 30th at 12PM IN YOUR TIME ZONE (monthIndex starts at zero)
+			const endTime = new Date(2018, 11, 30, 12, 0, 0);
+			// Unique list of contestants
+			const contestants = [];
+
+			// This generates an anonymous access token I use to interact with the API
+			getAccessToken().then(data => {
+				// Setup the API client
+				const r = window.r = new snoowrap({
+					userAgent: 'MrFahrenheit-451-Raven-Giveaway',
+					accessToken: data.access_token
+				});
+				r.config({ proxies: false, requestDelay: 100 });
+
+				// fetch the submission
+				r.getSubmission(submissionId).fetch().then(submission => {
+					$('#status').text('Fetching comments...');
+
+					// fetch all the root level comments
+					return submission.comments.fetchAll({skipReplies: true}).then(comments => ({
+						submission,
+						comments
+					}));
+				}).then(({submission, comments}) => {
+					// get all the names in order so we can look up our progress
+					let names = comments.map(comment => comment.author.name);
+
+					let promiseChain = Promise.resolve();
+					// for every comment
+					for (let i = 0; i < comments.length; i++) {
+						let comment = comments[i];
+						let name = comment.author.name;
+
+						// if the user is deleted, skip
+						if (name === '[deleted]') continue;
+
+						// if the comment was created after the end time, skip
+						if (comment.created_utc > endTime.getTime() / 1000) {
+							reject(i + 1, name, 'account too new');
+							continue;
+						}
+
+						// fetch the author's account
+						let iteration = comment.author.fetch().then(author => {
+							// our progress through the list of names
+							let progress = names.indexOf(author.name) + 1;
+
+							$('#status').text(`Processing comment ${progress} of ${comments.length}...`)
+
+							let rejectedReason;
+							if (contestants.indexOf(name) >= 0) {
+								// if the user is a duplicate, continue
+								rejectedReason = 'duplicate';
+							} else if (author.created_utc > submission.created_utc) {
+								// if the account was created before the submission
+								rejectedReason = 'account too new';
+							}
+
+							// if they're rejected, log the reason
+							if (rejectedReason) {
+								reject(progress, author.name, rejectedReason);
+							} else {
+								contestants.push(author.name);
+								$('#users').append(`<li>${ author.name }</li>`);
+							}
+						});
+						promiseChain = promiseChain.then(iteration);
+					}
+					return promiseChain;
+				}).then(() => {
+					$('#status').text('Finished!');
+				});;
+			});
 		</script>
 	</body>
 </html>
