@@ -7,7 +7,7 @@
 		<div id="status">Loading...</div>
 		<div id="drawing" style="display: none">
 			<button onclick="pickEntries()">DRAW!</button>
-			<dl id="results">
+			<dl id="results" style="display: none">
 				<dt>Winners</dt>
 			</dl>
 		</div>
@@ -133,6 +133,7 @@
 			}
 
 			function pickEntries() {
+				$('#results').show();
 				// remove the current winners
 				$("#results dd").remove();
 				// reset the possible winners
