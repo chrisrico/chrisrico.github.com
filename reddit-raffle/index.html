@@ -11,25 +11,216 @@
 				font-size: large;
 			}
 
-			div > span {
+			span {
 				float: left;
-				width: 6em;
+				width: 5em;
 			}
 		</style>
 	</head>
 	<body>
-		<div id="settings"><h1>Settings</h1></div>
 		<div id="status"><h1>Status</h1><div>Initializing...</div></div>
-		<dl id="winners">
-			<dt><h1>Winner</h1></dt>
-		</dl>
+		<dl id="params"><h1>Parameters</h1></dl>
 		<dl id="entries">
 			<dt><h1>Entries</h1></dt>
 		</dl>
+		<dl id="invalid">
+			<dt><h1>Invalid</h1></dt>
+		</dl>
 		<script>
-			$.fn.pluralize = function (n) {
-				return this.text((_, t) => `${t}${n > 1 ? 's' : ''}`);
+			$('#params, #entries, #winners, #invalid').hide();
+
+			const params = (new URL(document.location)).searchParams;
+			const submission = params.get('submission');
+			const endTime = new Date(params.get('endTime') || new Date());
+			const endTimestamp = endTime.getTime() / 1000;
+			const count = parseInt(params.get('count') || 1);
+			const skipCountdown = params.get('skipCountdown') === 'true';
+
+			let requirements = Promise.resolve([
+				new requirement('submission', !submission || !submission.match(/^[a-z0-9]+$/i)),
+				new requirement('endTime', isNaN(endTime), '(example: 2018-12-30T12:00)'),
+				new requirement('count', isNaN(count) || count < 1)
+			]);
+
+			requirements
+				.then(validateInputs)		// 0. Validate inputs
+				.then(getAccessToken)		// 1. Get an anonymous access token
+				.then(fetchSubmission)		// 2. Fetch the submission
+				.then(fetchAllComments)		// 3. Fetch all the root level comments
+				.then(getUniqueComments)	// 4. Get a list of valid, unique comments
+				.then(processEntries)		// 5. Print the valid entries
+				.then(countdown)			// 6. Dramatic pause...
+				.then(pickEntries)			// 7. Pick the winners
+				.catch(err => err instanceof $
+					? $('#status div').replaceWith(err)
+					: $('#status div').text(`Error: ${err}`));
+
+			function validateInputs(requirements) {
+				let errors = requirements
+					.filter(({predicate}) => predicate)
+					.map(r => r.render())
+					.reduce($.merge, $());
+
+				if (errors.length > 0) throw errors;
 			}
+
+			function getAccessToken() {
+				return $.ajax('https://www.reddit.com/api/v1/access_token', {
+					type: 'POST',
+					data: {
+						grant_type: 'https://oauth.reddit.com/grants/installed_client',
+						device_id: 'DO_NOT_TRACK_THIS_DEVICE'
+					},
+					headers: {
+						authorization: `Basic ${ btoa('0Ry1TaKGFLtP5Q:') }`,
+					}
+				});
+			}
+
+			function fetchSubmission(data) {
+				// Setup the API client
+				const r = window.r = new snoowrap({
+					userAgent: 'reddit-raffle',
+					accessToken: data.access_token
+				});
+				r.config({ proxies: false, requestDelay: 50 });
+
+				// fetch the submission
+				return r.getSubmission(submission).fetch();
+			}
+
+			function fetchAllComments(submission) {
+				if (submission.created_utc >= endTimestamp) throw "submission created after 'endTime'";
+
+				let subreddit = submission.subreddit.display_name,
+					title = submission.title,
+					startTime = new Date(submission.created_utc * 1000);
+
+				Object.entries({subreddit, submission: submission.id, title, startTime, endTime, count})
+					.map(([k, v]) => dd(k, v || '&nbsp;'))
+					.reduce($.merge, $())
+					.appendTo('#params')
+
+				$('#params').show();
+				$('#status div').text('Fetching comments...');
+
+				// fetch all the root level comments
+				return submission.comments.fetchAll({skipReplies: true}).then(comments => ({
+					submission,
+					comments
+				}));
+			}
+
+			function getUniqueComments({submission, comments}) {
+				// unique, valid comments
+				let uniqueComments = Object.values(comments
+					.filter(isValidComment)
+					// only keep one entry per user
+					.reduce(unique, {}));
+
+				// For each comment, fetch the user
+				// Waits for all operations to complete
+				return Promise.all(uniqueComments.map((comment, i) => {
+					return comment.author.fetch().then(user => {
+						$('#status div').text(`Fetching user ${i + 1} of ${uniqueComments.length}...`)
+						return {
+							submission, comment, user
+						};
+					});
+				}));
+			}
+
+			function processEntries(entries) {
+				if (entries.length == 0) throw 'No valid entries';
+
+				$('#entries').show();
+
+				entries
+					.filter(isValidEntry)
+					.map(({comment, user}) => dd(comment.id, user.name))
+					.reduce($.merge, $())
+					.appendTo('#entries');
+			}
+
+			function countdown() {
+				if (skipCountdown) return;
+
+				let seconds = 3;
+				let fn = i => $('#status div').text(`Drawing in ${i}...`);
+				return Promise.all([...Array(seconds + 1).keys()]
+					.map(i => delay(i * 1000).then(fn.bind(null, seconds-i))));
+			}
+
+			function pickEntries() {
+				let winners = $('<dl>').append(
+					$('<dt>').append(
+						$('<h1>').text(`Winner${count > 1 ? 's' : ''}`)
+					)
+				);
+
+				$('#entries dd')
+					.clone()
+					// shuffle them
+					.shuffle()
+					// take the first three
+					.slice(0, count)
+					.appendTo(winners);
+
+				// add the winning entries
+				winners.replaceAll('#status');
+			}
+
+			function isValidComment(comment) {
+				let id = comment.id, name = comment.author.name;
+				// don't bother lookup up accounts with the name [deleted]
+				if (name === '[deleted]') return reject(id, name);
+				// if the comment was created after the cutoff
+				if (comment.created_utc > endTimestamp) return reject(id, name, 'entered after deadline');
+				return true;
+			}
+
+			function isValidEntry({submission, comment, user}) {
+				// if the account was created before your post
+				if (user.created_utc > submission.created_utc) {
+					return reject(comment.id, user.name, 'account too new');
+				}
+				return true;
+			}
+
+			function dd(id, name, reason) {
+				reason = reason ? ` (${reason})` : '';
+				return $('<dd>').append($('<span>').text(id)).append(`${name}${reason}`);
+			}
+
+			// Log a rejected entry
+			function reject(id, name, reason) {
+				$('#invalid').show().append(dd(id, name, reason));
+			}
+
+			function unique(unique, comment) {
+				let name = comment.author.name;
+				if (name in unique) reject(comment.id, name, 'duplicate');
+				else unique[name] = comment;
+				return unique;
+			}
+
+			function generateRandomNumber(min , max) {
+				return Math.floor(Math.random() * (max-min) + min);
+			}
+
+			function delay(milliseconds) {
+				return new Promise(resolve => setTimeout(resolve, milliseconds));
+			}
+
+			function requirement(name, predicate, help) {
+				this.name = name;
+				this.predicate = predicate;
+				this.help = help || '';
+			}
+
+			requirement.prototype.render = function () {
+				return $('<div>').text(`Invalid parameter ${this.name} ${this.help}`);
+			};
 
 			// Fishers-Yates (Knuth) Shuffle
 			// https://stackoverflow.com/a/2450976
@@ -50,171 +241,6 @@
 
 				return this;
 			}
-
-			$('#entries, #winners').hide();
-
-			const params = (new URL(document.location)).searchParams;
-			const submissionId = params.get('submissionId') || 'aahfcv';
-			const endTime = new Date(params.get('endTime') || '2018-12-30T12:00');
-			const endTimestamp = endTime.getTime() / 1000;
-			const count = parseInt(params.get('count') || '3');
-
-			try {
-				if (!submissionId || !submissionId.match(/^[a-z0-9]+$/i)) throw ['submissionId'];
-				if (isNaN(endTime)) throw ['endTime', '(example: 2018-12-30T12:00)'];
-				if (isNaN(count) || count < 1) throw ['count'];
-			} catch ([err, help]) {
-				err = `Invalid querystring parameter '${err}'`;
-				$('#status div').text(`${err} ${help || ''}`)
-				throw err;
-			}
-
-			(function() {
-				$('#winners h1').pluralize(count);
-
-				Object.entries({submissionId, endTime, count})
-					.map(([k, v]) => $('<div>').append($('<span>').text(k)).append(v))
-					.reduce($.merge)
-					.appendTo('#settings')
-
-				// 1. Get an anonymous access token
-				getAccessToken()
-					// 2. Fetch the submission
-					.then(fetchSubmission)
-					// 3. Fetch all the root level comments
-					.then(fetchAllComments)
-					// 4. Get a list of valid, unique comments
-					.then(processUniqueComments)
-					// 5. Print the valid entries
-					.then(processEntries)
-					// 6. Dramatic pause...
-					.then(() => countdown(3, i => $('#status div').text(`Drawing in ${i}...`)))
-					// 7. Pick the winners
-					.then(pickEntries)
-					.catch(err => $('#status div').text(`Error: ${err}`));
-
-				function getAccessToken() {
-					return $.ajax('https://www.reddit.com/api/v1/access_token', {
-						type: 'POST',
-						data: {
-							grant_type: 'https://oauth.reddit.com/grants/installed_client',
-							device_id: 'DO_NOT_TRACK_THIS_DEVICE'
-						},
-						headers: {
-							authorization: `Basic ${ btoa('0Ry1TaKGFLtP5Q:') }`,
-						}
-					});
-				}
-
-				// Log a rejected entry
-				function reject(name, reason) {
-					console.log(`Rejected entry from ${name} (${reason})`);
-				}
-
-				function fetchSubmission(data) {
-					// Setup the API client
-					const r = window.r = new snoowrap({
-						userAgent: 'reddit-raffle',
-						accessToken: data.access_token
-					});
-					r.config({ proxies: false, requestDelay: 50 });
-
-					// fetch the submission
-					return r.getSubmission(submissionId).fetch();
-				}
-
-				function fetchAllComments(submission) {
-					if (submission.created_utc >= endTimestamp) throw 'endTime must be later than submission date';
-
-					$('#status div').text('Fetching comments...');
-
-					// fetch all the root level comments
-					return submission.comments.fetchAll({skipReplies: true}).then(comments => ({
-						submission,
-						comments
-					}));
-				}
-
-				function processUniqueComments({submission, comments}) {
-					// unique, valid comments
-					let uniqueComments = Object.values(comments
-						.filter(isValidComment)
-						// only keep one entry per user
-						.reduce((unique, comment) => {
-							let name = comment.author.name;
-							if (name in unique) reject(name, 'duplicate');
-							else unique[name] = comment;
-							return unique;
-						}, {}));
-
-					// For each comment, fetch the author
-					// Waits for all operations to complete
-					return Promise.all(uniqueComments.map((comment, i) => {
-						return comment.author.fetch().then(author => {
-							$('#status div').text(`Processing comment ${i + 1} of ${uniqueComments.length}...`)
-							return {
-								submission, comment, author
-							};
-						});
-					}));
-				}
-
-				function processEntries(entries) {
-					$('#entries').show();
-
-					entries
-						.filter(isValidEntry)
-						.map(({author}) => $('<dd>').text(author.name))
-						.reduce($.merge)
-						.appendTo('#entries');
-				}
-
-				function countdown(seconds, fn) {
-					return Promise.all([...Array(seconds + 1).keys()]
-						.map(i => delay(i * 1000).then(fn.bind(null, seconds-i))));
-				}
-
-				function pickEntries() {
-					$('#entries dd')
-						.clone()
-						// shuffle them
-						.shuffle()
-						// take the first three
-						.slice(0, count)
-						.appendTo('#winners');
-
-					// add the winning entries
-					$('#status').hide();
-					$('#winners').show();
-				}
-
-				function isValidComment(comment) {
-					let name = comment.author.name;
-					// don't bother lookup up accounts with the name [deleted]
-					if (name === '[deleted]') return false;
-					// if the comment was created after the cutoff
-					if (comment.created_utc > endTimestamp) {
-						return reject(name, 'entered after deadline');
-					}
-					return true;
-				}
-
-				function isValidEntry({submission, author}) {
-					// if the account was created before your post
-					if (author.created_utc > submission.created_utc) {
-						return reject(author.name, 'account too new');
-					}
-					return true;
-				}
-
-				function generateRandomNumber(min , max) {
-					return Math.floor(Math.random() * (max-min) + min);
-				}
-
-				function delay(milliseconds) {
-					return new Promise(resolve => setTimeout(resolve, milliseconds));
-				}
-			})();
 		</script>
 	</body>
 </html>
