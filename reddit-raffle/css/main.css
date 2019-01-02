@@ -1,0 +1,27 @@
+body {
+	font-size: medium;
+}
+
+h1 {
+	font-size: large;
+}
+
+h1 span {
+	font-size: medium;
+	font-weight: normal;
+}
+
+dt {
+	float: left;
+	width: 4em;
+}
+
+dd {
+	display: inline-block;
+	clear: both;
+}
+
+.winner {
+	background-color: green;
+	color: white;
+}
