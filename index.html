@@ -1,176 +1,132 @@
-<html>
-	<head>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-		<script src="https://not-an-aardvark.github.io/snoowrap/snoowrap-v1.15.0.min.js"></script>
-	</head>
-	<body>
-		<div id="status">Loading...</div>
-		<div id="drawing" style="display: none">
-			<button onclick="pickEntries()">DRAW!</button>
-			<dl id="results" style="display: none">
-				<dt>Winners</dt>
-			</dl>
-		</div>
-		<dl id="entries" style="display: none">
-			<dt>Entries</dt>
-		</dl>
-		<script>
-			// Unique ID for your post
-			const submissionId = 'aahfcv';
-			// December 30th at 12PM IN YOUR TIME ZONE
-			const endTimestamp = new Date('2018-12-30 12:00 PM').getTime() / 1000;
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 
-			// 1. Get an anonymous access token
-			getAccessToken()
-				// 2. Fetch the submission
-				.then(fetchSubmission)
-				// 3. Fetch all the root level comments
-				.then(fetchAllComments)
-				// 4. Get a list of valid, unique comments
-				.then(processUniqueComments)
-				// 5. Print the valid entries
-				.then(processEntries);
+    <title>Wordle - A daily word game</title>
+    <meta name="description" content="Guess the hidden word in 6 tries. A new puzzle is available each day.">
 
-			function getAccessToken() {
-				return $.ajax('https://www.reddit.com/api/v1/access_token', {
-					type: 'POST',
-					data: {
-						grant_type: 'https://oauth.reddit.com/grants/installed_client',
-						device_id: 'DO_NOT_TRACK_THIS_DEVICE'
-					},
-					headers: {
-						authorization: `Basic ${ btoa('0Ry1TaKGFLtP5Q:') }`,
-					}
-				});
-			}
+    <!-- FB Meta Tags -->
+    <meta property="og:url" content="https://www.powerlanguage.co.uk/wordle/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Wordle - A daily word game">
+    <meta property="og:description" content="Guess the hidden word in 6 tries. A new puzzle is available each day.">
+    <meta property="og:image" content="https://www.dailywordle.com/images/wordle_og_1200x630.png">
 
-			// Log a rejected entry
-			function reject(name, reason) {
-				console.log(`Rejected user ${name} (${reason})`);
-			}
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="twitter:domain" content="powerlanguage.co.uk">
 
-			function fetchSubmission(data) {
-				// Setup the API client
-				const r = window.r = new snoowrap({
-					userAgent: 'MrFahrenheit-451-Raven-Giveaway',
-					accessToken: data.access_token
-				});
-				r.config({ proxies: false, requestDelay: 10 });
+    <meta name="theme-color" content="#6aaa64" />
+    <link rel="manifest" href="manifest.json" />
+    <link href="images/wordle_logo_32x32.png" rel="icon shortcut" sizes="3232" />
+    <link href="images/wordle_logo_192x192.png" rel="apple-touch-icon" />
 
-				// fetch the submission
-				return r.getSubmission(submissionId).fetch();
-			}
-
-			function fetchAllComments(submission) {
-				$('#status').text('Fetching comments...');
-
-				// fetch all the root level comments
-				return submission.comments.fetchAll({skipReplies: true}).then(comments => ({
-					submission,
-					comments
-				}));
-			}
-
-			function processUniqueComments({submission, comments}) {
-				// unique, valid comments
-				let uniqueComments = Object.values(comments
-					.filter(isValidComment)
-					// only keep one entry per user
-					.reduce((unique, comment) => {
-						let name = comment.author.name;
-						if (name in unique) reject(name, 'duplicate');
-						else unique[name] = comment;
-						return unique;
-					}, {}));
-
-				// For each comment, fetch the author
-				// Waits for all operations to complete
-				return Promise.all(uniqueComments.map((comment, i) => {
-					return comment.author.fetch().then(author => {
-						$('#status').text(`Processing comment ${i} of ${uniqueComments.length}...`)
-						return {
-							submission, comment, author
-						};
-					});
-				}));
-			}
-
-			function processEntries(entries) {
-				$('#entries').show();
-
-				entries
-					.filter(isValidEntry)
-					.forEach(printEntry);
-
-				$('#status').hide();
-				$('#drawing').show();
-			}
-
-			function isValidComment(comment) {
-				let name = comment.author.name;
-				// don't bother lookup up accounts with the name [deleted]
-				if (name === '[deleted]') return false;
-				// if the comment was created after the cutoff
-				if (comment.created_utc > endTimestamp) {
-					return reject(name, 'entered after deadline');
-				}
-				return true;
-			}
-
-			function isValidEntry({submission, author}) {
-				// if the account was created before your post
-				if (author.created_utc > submission.created_utc) {
-					return reject(author.name, 'account too new');
-				}
-				return true;
-			}
-
-			function printEntry({author}) {
-				$('#entries').append(`<dd>${ author.name }</dd>`);
-			}
-
-			function generateRandomNumber(min , max) {
-				return Math.floor(Math.random() * (max-min) + min);
-			}
-
-			// Fishers-Yates (Knuth) Shuffle
-			// https://stackoverflow.com/a/2450976
-			Array.prototype.shuffle = function() {
-				let array = this.slice(0);
-				var currentIndex = array.length, temporaryValue, randomIndex;
-
-				// While there remain elements to shuffle...
-				while (0 !== currentIndex) {
-
-					// Pick a remaining element...
-					randomIndex = Math.floor(Math.random() * currentIndex);
-					currentIndex -= 1;
-
-					// And swap it with the current element.
-					temporaryValue = array[currentIndex];
-					array[currentIndex] = array[randomIndex];
-					array[randomIndex] = temporaryValue;
-				}
-
-				return array;
-			}
-
-			function pickEntries() {
-				$('#results').show();
-				let winners = $('#entries dd')
-					.toArray()
-					// get just the names
-					.map(e => e.innerText)
-					// shuffle them
-					.shuffle()
-					// take the first three
-					.slice(0, 3);
-
-				// remove any existing winners
-				$("#results dd").remove();
-				// add the new ones
-				winners.forEach(winner => $('#results').append(`<dd>${winner}</dd>`));
-			}
-		</script>
-	</body>
+    <style>
+      /* Global Styles & Colors */
+      :root {
+        --green: #6aaa64;
+        --darkendGreen: #538d4e;
+        --yellow: #c9b458;
+        --darkendYellow: #b59f3b;
+        --lightGray: #d8d8d8;
+        --gray: #86888a;
+        --darkGray: #939598;
+        --white: #fff;
+        --black: #212121;
+        /* Colorblind colors */
+        --orange: #f5793a;
+        --blue: #85c0f9;
+        font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        --header-height: 50px;
+        --keyboard-height: 200px;
+        --game-max-width: 500px;
+      }
+      /* Light theme colors */
+      :root {
+        --color-tone-1: #1a1a1b;
+        --color-tone-2: #787c7e;
+        --color-tone-3: #878a8c;
+        --color-tone-4: #d3d6da;
+        --color-tone-5: #edeff1;
+        --color-tone-6: #f6f7f8;
+        --color-tone-7: #ffffff;
+        --opacity-50: rgba(255, 255, 255, 0.5);
+      }
+      /* Dark Theme Colors */
+      .nightmode {
+        --color-tone-1: #d7dadc;
+        --color-tone-2: #818384;
+        --color-tone-3: #565758;
+        --color-tone-4: #3a3a3c;
+        --color-tone-5: #272729;
+        --color-tone-6: #1a1a1b;
+        --color-tone-7: #121213;
+        --opacity-50: rgba(0, 0, 0, 0.5);
+      }
+      /* Constant colors and colors derived from theme */
+      :root,
+      .nightmode {
+        --color-background: var(--color-tone-7);
+      }
+      :root {
+        --color-present: var(--yellow);
+        --color-correct: var(--green);
+        --color-absent: var(--color-tone-2);
+        --tile-text-color: var(--color-tone-7);
+        --key-text-color: var(--color-tone-1);
+        --key-evaluated-text-color: var(--color-tone-7);
+        --key-bg: var(--color-tone-4);
+        --key-bg-present: var(--color-present);
+        --key-bg-correct: var(--color-correct);
+        --key-bg-absent: var(--color-absent);
+        --modal-content-bg: var(--color-tone-7);
+      }
+      .nightmode {
+        --color-present: var(--darkendYellow);
+        --color-correct: var(--darkendGreen);
+        --color-absent: var(--color-tone-4);
+        --tile-text-color: var(--color-tone-1);
+        --key-text-color: var(--color-tone-1);
+        --key-evaluated-text-color: var(--color-tone-1);
+        --key-bg: var(--color-tone-2);
+        --key-bg-present: var(--color-present);
+        --key-bg-correct: var(--color-correct);
+        --key-bg-absent: var(--color-absent);
+        --modal-content-bg: var(--color-tone-7);
+      }
+      .colorblind {
+        --color-correct: var(--orange);
+        --color-present: var(--blue);
+        --tile-text-color: var(--white);
+        --key-bg-present: var(--color-present);
+        --key-bg-correct: var(--color-correct);
+        --key-bg-absent: var(--color-absent);
+      }
+      html {
+        height: 100%;
+      }
+      body {
+        height: 100%;
+        background-color: var(--color-background);
+        margin: 0;
+        padding: 0;
+        /* Prevent scrollbar appearing on page transition */
+        overflow-y: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      (function () {
+        // Defining the hash before the main bundle allows the bundle access window.hash
+        window.wordle = window.wordle || {};
+        window.wordle.hash = 'e65ce0a5';
+      })();
+    </script>
+    <script src="main.e65ce0a5.js"></script>
+    <game-app></game-app>
+  </body>
 </html>
